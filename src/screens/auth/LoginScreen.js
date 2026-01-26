@@ -1,4 +1,4 @@
-// LoginScreen.js
+// LoginScreen.js - Simplified without push notification logic
 import React, { useState } from 'react';
 import {
   View,
@@ -33,7 +33,6 @@ const LoginScreen = ({ navigation }) => {
   };
 
   const handleLogin = async () => {
-    // Validation
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -47,14 +46,11 @@ const LoginScreen = ({ navigation }) => {
     setLoading(true);
 
     try {
-      // Call the actual API
       const response = await authService.login(email, password);
-
-      // Extract token and user data from response
       const token = response.token;
       const userData = response.user;
 
-      // Save to auth context
+      // Just login - no notification
       await login(token, userData);
 
       Alert.alert(
@@ -63,9 +59,10 @@ const LoginScreen = ({ navigation }) => {
         [{ text: 'Continue' }]
       );
     } catch (error) {
+      console.error('Login error:', error);
       Alert.alert(
         'Login Failed',
-        error.message || 'Invalid email or password. Please try again.'
+        error.message || 'Invalid credentials. Please try again.'
       );
     } finally {
       setLoading(false);
@@ -74,12 +71,12 @@ const LoginScreen = ({ navigation }) => {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Header Section */}
         <View style={styles.headerContainer}>
@@ -97,20 +94,20 @@ const LoginScreen = ({ navigation }) => {
           {/* Email Input */}
           <View style={styles.inputWrapper}>
             <Text style={styles.label}>Email Address</Text>
-            <View style={[
-              styles.inputContainer,
-              emailFocused && styles.inputContainerFocused
-            ]}>
+            <View
+              style={[
+                styles.inputContainer,
+                emailFocused && styles.inputContainerFocused,
+              ]}
+            >
               <Text style={styles.inputIcon}>✉️</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Enter your email"
-                placeholderTextColor="#999"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                autoCorrect={false}
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
               />
@@ -120,19 +117,19 @@ const LoginScreen = ({ navigation }) => {
           {/* Password Input */}
           <View style={styles.inputWrapper}>
             <Text style={styles.label}>Password</Text>
-            <View style={[
-              styles.inputContainer,
-              passwordFocused && styles.inputContainerFocused
-            ]}>
+            <View
+              style={[
+                styles.inputContainer,
+                passwordFocused && styles.inputContainerFocused,
+              ]}
+            >
               <Text style={styles.inputIcon}>🔒</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Enter your password"
-                placeholderTextColor="#999"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
-                autoCapitalize="none"
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => setPasswordFocused(false)}
               />
@@ -178,11 +175,11 @@ const LoginScreen = ({ navigation }) => {
 
           {/* Social Login Buttons */}
           <View style={styles.socialContainer}>
-            <TouchableOpacity style={styles.socialButton}>
+            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
               <Text style={styles.socialIcon}>📘</Text>
               <Text style={styles.socialText}>Facebook</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
+            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
               <Text style={styles.socialIcon}>🔴</Text>
               <Text style={styles.socialText}>Google</Text>
             </TouchableOpacity>

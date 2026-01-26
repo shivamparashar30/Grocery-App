@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/authService';
+import notificationService from '../../services/notificationService';
 
 const SignupScreen = ({ navigation }) => {
   const { login } = useAuth();
@@ -25,7 +26,7 @@ const SignupScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   // Focus states
   const [nameFocused, setNameFocused] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
@@ -78,8 +79,27 @@ const SignupScreen = ({ navigation }) => {
     setLoading(true);
 
     try {
-      // Call the actual signup API (role defaults to 'user')
-      const response = await authService.signup(name, email, password, phone, 'user');
+      // Request notification permissions first
+      const permissionGranted = await notificationService.requestPermission();
+      
+      // Get FCM token
+      let fcmToken = null;
+      if (permissionGranted) {
+        fcmToken = await notificationService.getToken();
+        console.log('FCM Token obtained:', fcmToken);
+      } else {
+        console.log('Notification permission denied');
+      }
+
+      // Call the signup API with FCM token
+      const response = await authService.signup(
+        name,
+        email,
+        password,
+        phone,
+        'user',
+        fcmToken // Pass FCM token to backend
+      );
 
       // Extract token and user data from response
       const token = response.token;
@@ -89,11 +109,13 @@ const SignupScreen = ({ navigation }) => {
       await login(token, userData);
 
       Alert.alert(
-        'Success!',
-        `Account created successfully! Welcome, ${name}!`,
-        [{ text: 'Continue' }]
+        'Welcome! 🎉',
+        `Account created successfully!\n\nCheck your notifications for a special welcome offer!`,
+        [{ text: 'Let\'s Shop!', onPress: () => {} }]
       );
+
     } catch (error) {
+      console.error('Signup error:', error);
       Alert.alert(
         'Signup Failed',
         error.message || 'Unable to create account. Please try again.'
@@ -105,26 +127,28 @@ const SignupScreen = ({ navigation }) => {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Header Section */}
         <View style={styles.headerContainer}>
-          <TouchableOpacity 
-            style={styles.backButton}
+          <TouchableOpacity
             onPress={() => navigation.goBack()}
+            style={styles.backButton}
           >
             <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
+
           <View style={styles.logoContainer}>
             <View style={styles.logo}>
               <Text style={styles.logoIcon}>🛒</Text>
             </View>
           </View>
+
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Join us and start shopping today!</Text>
         </View>
@@ -134,15 +158,16 @@ const SignupScreen = ({ navigation }) => {
           {/* Name Input */}
           <View style={styles.inputWrapper}>
             <Text style={styles.label}>Full Name</Text>
-            <View style={[
-              styles.inputContainer,
-              nameFocused && styles.inputContainerFocused
-            ]}>
+            <View
+              style={[
+                styles.inputContainer,
+                nameFocused && styles.inputContainerFocused,
+              ]}
+            >
               <Text style={styles.inputIcon}>👤</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Enter your full name"
-                placeholderTextColor="#999"
                 value={name}
                 onChangeText={setName}
                 autoCapitalize="words"
@@ -155,20 +180,20 @@ const SignupScreen = ({ navigation }) => {
           {/* Email Input */}
           <View style={styles.inputWrapper}>
             <Text style={styles.label}>Email Address</Text>
-            <View style={[
-              styles.inputContainer,
-              emailFocused && styles.inputContainerFocused
-            ]}>
+            <View
+              style={[
+                styles.inputContainer,
+                emailFocused && styles.inputContainerFocused,
+              ]}
+            >
               <Text style={styles.inputIcon}>✉️</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Enter your email"
-                placeholderTextColor="#999"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                autoCorrect={false}
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
               />
@@ -178,15 +203,16 @@ const SignupScreen = ({ navigation }) => {
           {/* Phone Input */}
           <View style={styles.inputWrapper}>
             <Text style={styles.label}>Phone Number</Text>
-            <View style={[
-              styles.inputContainer,
-              phoneFocused && styles.inputContainerFocused
-            ]}>
+            <View
+              style={[
+                styles.inputContainer,
+                phoneFocused && styles.inputContainerFocused,
+              ]}
+            >
               <Text style={styles.inputIcon}>📱</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Enter your phone number"
-                placeholderTextColor="#999"
+                placeholder="Enter 10-digit phone number"
                 value={phone}
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
@@ -200,21 +226,19 @@ const SignupScreen = ({ navigation }) => {
           {/* Password Input */}
           <View style={styles.inputWrapper}>
             <Text style={styles.label}>Password</Text>
-            <View style={[
-              styles.inputContainer,
-              passwordFocused && styles.inputContainerFocused
-            ]}>
+            <View
+              style={[
+                styles.inputContainer,
+                passwordFocused && styles.inputContainerFocused,
+              ]}
+            >
               <Text style={styles.inputIcon}>🔒</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Create a password"
-                placeholderTextColor="#999"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
-                autoCapitalize="none"
-                autoCorrect={false}
-                textContentType="newPassword"
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => setPasswordFocused(false)}
               />
@@ -233,21 +257,19 @@ const SignupScreen = ({ navigation }) => {
           {/* Confirm Password Input */}
           <View style={styles.inputWrapper}>
             <Text style={styles.label}>Confirm Password</Text>
-            <View style={[
-              styles.inputContainer,
-              confirmPasswordFocused && styles.inputContainerFocused
-            ]}>
+            <View
+              style={[
+                styles.inputContainer,
+                confirmPasswordFocused && styles.inputContainerFocused,
+              ]}
+            >
               <Text style={styles.inputIcon}>🔐</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Confirm your password"
-                placeholderTextColor="#999"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirmPassword}
-                autoCapitalize="none"
-                autoCorrect={false}
-                textContentType="newPassword"
                 onFocus={() => setConfirmPasswordFocused(true)}
                 onBlur={() => setConfirmPasswordFocused(false)}
               />
@@ -267,7 +289,9 @@ const SignupScreen = ({ navigation }) => {
           <View style={styles.requirementsContainer}>
             <Text style={styles.requirementsTitle}>Password must contain:</Text>
             <View style={styles.requirementItem}>
-              <Text style={password.length >= 6 ? styles.checkValid : styles.checkInvalid}>
+              <Text
+                style={password.length >= 6 ? styles.checkValid : styles.checkInvalid}
+              >
                 {password.length >= 6 ? '✓' : '○'}
               </Text>
               <Text style={styles.requirementText}>At least 6 characters</Text>
@@ -278,8 +302,7 @@ const SignupScreen = ({ navigation }) => {
           <View style={styles.termsContainer}>
             <Text style={styles.termsText}>
               By signing up, you agree to our{' '}
-              <Text style={styles.termsLink}>Terms & Conditions</Text>
-              {' '}and{' '}
+              <Text style={styles.termsLink}>Terms & Conditions</Text> and{' '}
               <Text style={styles.termsLink}>Privacy Policy</Text>
             </Text>
           </View>
@@ -307,11 +330,11 @@ const SignupScreen = ({ navigation }) => {
 
           {/* Social Signup Buttons */}
           <View style={styles.socialContainer}>
-            <TouchableOpacity style={styles.socialButton}>
+            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
               <Text style={styles.socialIcon}>📘</Text>
               <Text style={styles.socialText}>Facebook</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
+            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
               <Text style={styles.socialIcon}>🔴</Text>
               <Text style={styles.socialText}>Google</Text>
             </TouchableOpacity>
@@ -329,7 +352,6 @@ const SignupScreen = ({ navigation }) => {
     </KeyboardAvoidingView>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
