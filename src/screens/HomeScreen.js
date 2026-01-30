@@ -14,24 +14,34 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Icon1 from 'react-native-vector-icons/Entypo';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import LinearGradient from 'react-native-linear-gradient';
+import LottieView from 'lottie-react-native';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const gradientAnim = useRef(new Animated.Value(0)).current;
+  const snowAnim = useRef(new Animated.Value(0)).current;
+  const snowAnim2 = useRef(new Animated.Value(0)).current;
+  const snowAnim3 = useRef(new Animated.Value(0)).current;
+  const snowAnim4 = useRef(new Animated.Value(0)).current;
+  const snowAnim5 = useRef(new Animated.Value(0)).current;
+  const lottieRef = useRef(null);
+  const kidsLottieRef = useRef(null);
 
-  // Category-specific gradient colors
+  // Category-specific gradient colors - Updated to bluish/cool tones
   const categoryGradients = {
-    All: ['#FFE082', '#FFD54F'],
-    Winter: ['#B3E5FC', '#81D4FA'],
-    Electronics: ['#CE93D8', '#BA68C8'],
-    Beauty: ['#F48FB1', '#F06292'],
-    Decor: ['#A5D6A7', '#81C784'],
-    Kids: ['#FFE082', '#FFD54F'],
+    All: ['#E0F7FA', '#B2EBF2'], // Light cyan/teal
+    Winter: ['#B3E5FC', '#81D4FA'], // Light blue
+    Electronics: ['#CE93D8', '#BA68C8'], // Purple
+    Beauty: ['#F48FB1', '#F06292'], // Pink
+    Decor: ['#A5D6A7', '#81C784'], // Green
+    Kids: ['#FFCDD2', '#EF9A9A'], // Coral pink
   };
 
   useEffect(() => {
@@ -40,31 +50,101 @@ const HomeScreen = () => {
       duration: 500,
       useNativeDriver: false,
     }).start();
-  }, [selectedCategory]);
+
+    // Animate multiple snowflakes falling and play Lottie
+    if (selectedCategory === 'Winter') {
+      // Play Lottie animation
+      if (lottieRef.current) {
+        lottieRef.current.play();
+      }
+      
+      Animated.loop(
+        Animated.timing(snowAnim, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+        })
+      ).start();
+      
+      Animated.loop(
+        Animated.timing(snowAnim2, {
+          toValue: 1,
+          duration: 3500,
+          useNativeDriver: true,
+        })
+      ).start();
+      
+      Animated.loop(
+        Animated.timing(snowAnim3, {
+          toValue: 1,
+          duration: 4000,
+          useNativeDriver: true,
+        })
+      ).start();
+      
+      Animated.loop(
+        Animated.timing(snowAnim4, {
+          toValue: 1,
+          duration: 3200,
+          useNativeDriver: true,
+        })
+      ).start();
+      
+      Animated.loop(
+        Animated.timing(snowAnim5, {
+          toValue: 1,
+          duration: 3800,
+          useNativeDriver: true,
+        })
+      ).start();
+    } else {
+      // Pause Lottie animation
+      if (lottieRef.current) {
+        lottieRef.current.pause();
+      }
+      
+      snowAnim.setValue(0);
+      snowAnim2.setValue(0);
+      snowAnim3.setValue(0);
+      snowAnim4.setValue(0);
+      snowAnim5.setValue(0);
+    }
+
+    // Handle Kids animation
+    if (selectedCategory === 'Kids' && !isSearchFocused) {
+      if (kidsLottieRef.current) {
+        kidsLottieRef.current.play();
+      }
+    } else {
+      if (kidsLottieRef.current) {
+        kidsLottieRef.current.pause();
+      }
+    }
+  }, [selectedCategory, isSearchFocused]);
 
   const getCurrentGradient = () => {
     return categoryGradients[selectedCategory] || categoryGradients.All;
   };
 
   // Categories data
-const categories = [
-  { id: '1', name: 'All', icon: 'grid', iconType: 'Ionicons' },
-  { id: '2', name: 'Winter', icon: 'snow', iconType: 'Ionicons' },
-  { id: '3', name: 'Electronics', icon: 'headset', iconType: 'Ionicons' },
-  { id: '4', name: 'Beauty', icon: 'rose', iconType: 'Ionicons' },
-  { id: '5', name: 'Decor', icon: 'home', iconType: 'Ionicons' },
-  { id: '6', name: 'Kids', icon: 'football', iconType: 'Ionicons' },
-];
+  const categories = [
+    { id: '1', name: 'All', icon: 'grid', iconType: 'Ionicons' },
+    { id: '2', name: 'Winter', icon: 'snow', iconType: 'Ionicons' },
+    { id: '3', name: 'Electronics', icon: 'headset', iconType: 'Ionicons' },
+    { id: '4', name: 'Beauty', icon: 'rose', iconType: 'Ionicons' },
+    { id: '5', name: 'Decor', icon: 'bulb', iconType: 'Ionicons' },
+    { id: '6', name: 'Kids', icon: 'football', iconType: 'Ionicons' },
+  ];
 
-  // Featured banners data
+  // Featured banners data - Updated colors
   const featuredBanners = {
     All: [
       { 
         id: '1', 
         title: 'NEWLY\nLAUNCHED',
         badge: 'For You',
-        color: ['#FFE4B5', '#FFD700'],
-        image: 'https://via.placeholder.com/200x300/FFE4B5/000000?text=New',
+        color: ['#80DEEA', '#4DD0E1'], // Cyan gradient
+        image: 'https://via.placeholder.com/200x300/80DEEA/000000?text=New',
       },
       { 
         id: '2', 
@@ -193,7 +273,16 @@ const categories = [
 
   const handleCategoryPress = (categoryName) => {
     setSelectedCategory(categoryName);
+    setIsSearchFocused(false); // Reset search focus when changing category
     gradientAnim.setValue(0);
+  };
+
+  const handleSearchFocus = () => {
+    setIsSearchFocused(true);
+  };
+
+  const handleSearchBlur = () => {
+    setIsSearchFocused(false);
   };
 
   // Render icon helper
@@ -297,165 +386,323 @@ const categories = [
 
   const currentBanners = featuredBanners[selectedCategory] || featuredBanners.All;
   const isWinterSelected = selectedCategory === 'Winter';
+  const isKidsSelected = selectedCategory === 'Kids';
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={getCurrentGradient()[0]} />
       
-      {/* Header Background with gradient */}
-      <LinearGradient
-        colors={getCurrentGradient()}
-        style={styles.headerBackground}
-      >
-        <SafeAreaView edges={['top']} style={styles.safeArea}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.headerLeft}>
-              <Text style={styles.deliveryTime}>Blinkit in</Text>
-              <View style={styles.deliveryRow}>
-                <Text style={styles.deliveryMinutes}>15 minutes</Text>
-                <View style={styles.distanceBadge}>
-                  <Icon name="car" size={12} color="#00897B" />
-                  <Text style={styles.distanceText}>1 km away</Text>
+      {/* Header Background with gradient and Winter animation */}
+      <View style={styles.headerBackground}>
+        <LinearGradient
+          colors={getCurrentGradient()}
+          style={styles.headerGradient}
+        >
+          {/* Winter Lottie Bear Animation - Positioned in top right */}
+          {isWinterSelected && (
+            <View style={styles.lottieContainer} pointerEvents="none">
+              <LottieView
+                ref={lottieRef}
+                source={require('../../assets/BearWinter.json')}
+                autoPlay
+                loop
+                style={styles.lottieAnimation}
+              />
+            </View>
+          )}
+          
+          {/* Winter Snowflakes - ABOVE the gradient content with proper positioning */}
+          {isWinterSelected && (
+            <View style={styles.snowfallContainer} pointerEvents="none">
+              {/* Snowflake 1 */}
+              <Animated.View
+                style={[
+                  styles.snowflake,
+                  { left: '10%' },
+                  {
+                    transform: [
+                      {
+                        translateY: snowAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, 400],
+                        }),
+                      },
+                    ],
+                    opacity: snowAnim.interpolate({
+                      inputRange: [0, 0.2, 0.8, 1],
+                      outputRange: [0, 1, 1, 0],
+                    }),
+                  },
+                ]}
+              >
+                <Icon name="snow" size={30} color="#FFFFFF" style={styles.snowIcon} />
+              </Animated.View>
+              
+              {/* Snowflake 2 */}
+              <Animated.View
+                style={[
+                  styles.snowflake,
+                  { left: '30%' },
+                  {
+                    transform: [
+                      {
+                        translateY: snowAnim2.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, 420],
+                        }),
+                      },
+                    ],
+                    opacity: snowAnim2.interpolate({
+                      inputRange: [0, 0.2, 0.8, 1],
+                      outputRange: [0, 1, 1, 0],
+                    }),
+                  },
+                ]}
+              >
+                <Icon name="snow" size={24} color="#FFFFFF" style={styles.snowIcon} />
+              </Animated.View>
+              
+              {/* Snowflake 3 */}
+              <Animated.View
+                style={[
+                  styles.snowflake,
+                  { left: '50%' },
+                  {
+                    transform: [
+                      {
+                        translateY: snowAnim3.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, 380],
+                        }),
+                      },
+                    ],
+                    opacity: snowAnim3.interpolate({
+                      inputRange: [0, 0.2, 0.8, 1],
+                      outputRange: [0, 1, 1, 0],
+                    }),
+                  },
+                ]}
+              >
+                <Icon name="snow" size={28} color="#FFFFFF" style={styles.snowIcon} />
+              </Animated.View>
+              
+              {/* Snowflake 4 */}
+              <Animated.View
+                style={[
+                  styles.snowflake,
+                  { left: '70%' },
+                  {
+                    transform: [
+                      {
+                        translateY: snowAnim4.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, 410],
+                        }),
+                      },
+                    ],
+                    opacity: snowAnim4.interpolate({
+                      inputRange: [0, 0.2, 0.8, 1],
+                      outputRange: [0, 1, 1, 0],
+                    }),
+                  },
+                ]}
+              >
+                <Icon name="snow" size={26} color="#FFFFFF" style={styles.snowIcon} />
+              </Animated.View>
+              
+              {/* Snowflake 5 */}
+              <Animated.View
+                style={[
+                  styles.snowflake,
+                  { left: '85%' },
+                  {
+                    transform: [
+                      {
+                        translateY: snowAnim5.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, 390],
+                        }),
+                      },
+                    ],
+                    opacity: snowAnim5.interpolate({
+                      inputRange: [0, 0.2, 0.8, 1],
+                      outputRange: [0, 1, 1, 0],
+                    }),
+                  },
+                ]}
+              >
+                <Icon name="snow" size={22} color="#FFFFFF" style={styles.snowIcon} />
+              </Animated.View>
+            </View>
+          )}
+          
+          <SafeAreaView edges={['top']} style={styles.safeArea}>
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={styles.headerLeft}>
+                <View style={styles.deliveryRow}>
+                  <Text style={styles.deliveryMinutes}>15 minutes</Text>
+                  <View style={styles.distanceBadge}>
+                    <Icon name="car" size={12} color="#00897B" />
+                    <Text style={styles.distanceText}>1 km away</Text>
+                  </View>
                 </View>
+                <TouchableOpacity style={styles.locationContainer}>
+                  <Text style={styles.locationText}>HOME - Shivam</Text>
+                  <Icon name="chevron-down" size={14} color="#1A1A1A" />
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity style={styles.locationContainer}>
-                <Text style={styles.locationText}>HOME - Shivam</Text>
-                <Icon name="chevron-down" size={14} color="#1A1A1A" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.headerRight}>
-              <TouchableOpacity style={styles.walletButton}>
-                <Image 
-                  source={{ uri: 'https://via.placeholder.com/40/FFD700/000000?text=₹' }}
-                  style={styles.walletIcon}
-                />
-                <Text style={styles.walletAmount}>₹0</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.profileButton}>
-                <Icon name="person" size={24} color="#1A1A1A" />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Search Bar */}
-          <View style={styles.searchContainer}>
-            <Icon name="search" size={22} color="#666" />
-            <TextInput
-              style={styles.searchInput}
-              placeholder='Search "board games"'
-              placeholderTextColor="#999"
-            />
-            <TouchableOpacity style={styles.micButton}>
-              <Icon name="mic" size={22} color="#1A1A1A" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Categories Tab */}
-          <FlatList
-            data={categories}
-            renderItem={renderCategory}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoriesContent}
-          />
-        </SafeAreaView>
-      </LinearGradient>
-
-      {/* Scrollable Content */}
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Winter Season Banner (only for Winter category) */}
-        {isWinterSelected && (
-          <View style={styles.winterBanner}>
-            <Image 
-              source={{ uri: 'https://via.placeholder.com/100/FF6B35/FFFFFF?text=🎿' }}
-              style={styles.winterBannerImage}
-            />
-            <View style={styles.winterBannerContent}>
-              <Text style={styles.winterBannerSubtitle}>STOCK UP FOR THE</Text>
-              <Text style={styles.winterBannerTitle}>Winter Season</Text>
-            </View>
-            <Image 
-              source={{ uri: 'https://via.placeholder.com/100/FFFFFF/000000?text=☃️' }}
-              style={styles.winterBannerImage}
-            />
-          </View>
-        )}
-
-        {/* Featured Banners */}
-        <View style={styles.featuredSection}>
-          <FlatList
-            data={currentBanners}
-            renderItem={renderFeaturedBanner}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.featuredContent}
-          />
-        </View>
-
-        {/* Winter Products Section (only for Winter category) */}
-        {isWinterSelected && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View>
-                <Text style={styles.sectionTitle}>Time to snuggle, sip & stay warm!</Text>
-                <Text style={styles.sectionSubtitle}>Grab deals on top winter picks</Text>
+              <View style={styles.headerRight}>
+                <TouchableOpacity style={styles.walletButton}>
+                  <Icon1 name="shopping-cart" size={24} color="#1A1A1A" />
+                  <Text style={styles.walletAmount}>₹0</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.profileButton}>
+                  <Icon name="person" size={24} color="#1A1A1A" />
+                </TouchableOpacity>
               </View>
             </View>
+
+            {/* Search Bar with Kids Animation */}
+            <View style={styles.searchContainer}>
+              {/* Kids Lottie Animation in Search Bar */}
+              {isKidsSelected && !isSearchFocused && (
+                <View style={styles.kidsSearchLottieContainer} pointerEvents="none">
+                  <LottieView
+                    ref={kidsLottieRef}
+                    source={require('../../assets/kids.json')}
+                    autoPlay
+                    loop
+                    style={styles.kidsSearchLottie}
+                  />
+                </View>
+              )}
+              
+              <Icon name="search" size={22} color="#666" />
+              <TextInput
+                style={styles.searchInput}
+                placeholder={isKidsSelected && !isSearchFocused ? '' : 'Search "board games"'}
+                placeholderTextColor="#999"
+                onFocus={handleSearchFocus}
+                onBlur={handleSearchBlur}
+              />
+              <TouchableOpacity style={styles.micButton}>
+                <Icon name="mic" size={22} color="#1A1A1A" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Categories Tab */}
             <FlatList
-              data={winterProducts}
-              renderItem={renderWinterProduct}
+              data={categories}
+              renderItem={renderCategory}
               keyExtractor={(item) => item.id}
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.winterProductsList}
+              contentContainerStyle={styles.categoriesContent}
             />
-          </View>
-        )}
+          </SafeAreaView>
+        </LinearGradient>
+      </View>
 
-        {/* Frequently Bought Section (only for All category) */}
-        {selectedCategory === 'All' && (
-          <View style={styles.section}>
-            <Text style={styles.frequentlyBoughtTitle}>Frequently bought</Text>
-            <FlatList
-              data={frequentlyBought}
-              renderItem={renderFrequentlyBought}
-              keyExtractor={(item) => item.id}
-              numColumns={2}
-              scrollEnabled={false}
-              columnWrapperStyle={styles.frequentRow}
-            />
-          </View>
-        )}
-
-        {/* Promotional Banner */}
-        <View style={styles.promoBanner}>
-          <View style={styles.promoContent}>
-            <View style={styles.promoIconContainer}>
+      {/* Scrollable Content - Touchable to restore animation */}
+      <TouchableOpacity 
+        style={styles.scrollViewTouchable}
+        activeOpacity={1}
+        onPress={() => setIsSearchFocused(false)}
+      >
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Winter Season Banner (only for Winter category) */}
+          {isWinterSelected && (
+            <View style={styles.winterBanner}>
               <Image 
-                source={{ uri: 'https://via.placeholder.com/60/7C4DFF/FFFFFF?text=D' }}
-                style={styles.promoIcon}
+                source={{ uri: 'https://via.placeholder.com/100/FF6B35/FFFFFF?text=🎿' }}
+                style={styles.winterBannerImage}
+              />
+              <View style={styles.winterBannerContent}>
+                <Text style={styles.winterBannerSubtitle}>STOCK UP FOR THE</Text>
+                <Text style={styles.winterBannerTitle}>Winter Season</Text>
+              </View>
+              <Image 
+                source={{ uri: 'https://via.placeholder.com/100/FFFFFF/000000?text=☃️' }}
+                style={styles.winterBannerImage}
               />
             </View>
-            <View style={styles.promoTextContainer}>
-              <Text style={styles.promoTitle}>Get a District Movie Voucher worth ₹125</Text>
-              <Text style={styles.promoSubtitle}>on orders above ₹199</Text>
-            </View>
-            <Icon name="chevron-forward" size={20} color="#666" />
-          </View>
-          <TouchableOpacity style={styles.promoClose}>
-            <Icon name="close" size={20} color="#999" />
-          </TouchableOpacity>
-        </View>
+          )}
 
-        {/* Bottom Spacing */}
-        <View style={styles.bottomSpacing} />
-      </ScrollView>
+          {/* Featured Banners */}
+          <View style={styles.featuredSection}>
+            <FlatList
+              data={currentBanners}
+              renderItem={renderFeaturedBanner}
+              keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.featuredContent}
+            />
+          </View>
+
+          {/* Winter Products Section (only for Winter category) */}
+          {isWinterSelected && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <View>
+                  <Text style={styles.sectionTitle}>Time to snuggle, sip & stay warm!</Text>
+                  <Text style={styles.sectionSubtitle}>Grab deals on top winter picks</Text>
+                </View>
+              </View>
+              <FlatList
+                data={winterProducts}
+                renderItem={renderWinterProduct}
+                keyExtractor={(item) => item.id}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.winterProductsList}
+              />
+            </View>
+          )}
+
+          {/* Frequently Bought Section (only for All category) */}
+          {selectedCategory === 'All' && (
+            <View style={styles.section}>
+              <Text style={styles.frequentlyBoughtTitle}>Frequently bought</Text>
+              <FlatList
+                data={frequentlyBought}
+                renderItem={renderFrequentlyBought}
+                keyExtractor={(item) => item.id}
+                numColumns={2}
+                scrollEnabled={false}
+                columnWrapperStyle={styles.frequentRow}
+              />
+            </View>
+          )}
+
+          {/* Promotional Banner */}
+          <View style={styles.promoBanner}>
+            <View style={styles.promoContent}>
+              <View style={styles.promoIconContainer}>
+                <Image 
+                  source={{ uri: 'https://via.placeholder.com/60/7C4DFF/FFFFFF?text=D' }}
+                  style={styles.promoIcon}
+                />
+              </View>
+              <View style={styles.promoTextContainer}>
+                <Text style={styles.promoTitle}>Get a District Movie Voucher worth ₹125</Text>
+                <Text style={styles.promoSubtitle}>on orders above ₹199</Text>
+              </View>
+              <Icon name="chevron-forward" size={20} color="#666" />
+            </View>
+            <TouchableOpacity style={styles.promoClose}>
+              <Icon name="close" size={20} color="#999" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Bottom Spacing */}
+          <View style={styles.bottomSpacing} />
+        </ScrollView>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -466,14 +713,50 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
   },
   headerBackground: {
+    position: 'relative',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 3,
   },
+  headerGradient: {
+    position: 'relative',
+  },
+  lottieContainer: {
+    position: 'absolute',
+    top: 30,
+    right: 140,
+    width: 120,
+    height: 120,
+    zIndex: 2,
+  },
+  lottieAnimation: {
+    width: '100%',
+    height: '100%',
+  },
+  snowfallContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 10,
+  },
+  snowflake: {
+    position: 'absolute',
+    top: -20,
+    zIndex: 10,
+  },
+  snowIcon: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
   safeArea: {
-    // backgroundColor is handled by LinearGradient
+    position: 'relative',
+    zIndex: 5,
   },
   header: {
     flexDirection: 'row',
@@ -584,6 +867,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
+    position: 'relative',
+  },
+  kidsSearchLottieContainer: {
+    position: 'absolute',
+    right: 120,
+    top: 0,
+    width: 300,
+    height: 60,
+    zIndex: 10,
+  },
+  kidsSearchLottie: {
+    width: '100%',
+    height: '100%',
   },
   searchInput: {
     flex: 1,
@@ -624,6 +920,9 @@ const styles = StyleSheet.create({
     height: 3,
     backgroundColor: '#1A1A1A',
     borderRadius: 2,
+  },
+  scrollViewTouchable: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
