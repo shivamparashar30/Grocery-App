@@ -1,77 +1,19 @@
-// import React from 'react';
-// import { createNativeStackNavigator } from '@react-navigation/native-stack';
-// import HomeScreen from '../screens/HomeScreen';
-// import OrderAgainScreen from '../screens/OrderAgainScreen';
-// import CategoriesScreen from '../screens/CategoriesScreen';
-// import PrintScreen from '../screens/PrintScreen';
-// import BottomTabNavigator from '../navigation/BottomTabNavigator';
-
-// const Stack = createNativeStackNavigator();
-
-// // Main Tab Container Component
-// const TabContainer = ({ navigation, route }) => {
-//   const [activeTab, setActiveTab] = React.useState('Home');
-
-//   const handleTabPress = (tabId) => {
-//     setActiveTab(tabId);
-//   };
-
-//   const renderScreen = () => {
-//     switch (activeTab) {
-//       case 'Home':
-//         return <HomeScreen />;
-//       case 'OrderAgain':
-//         return <OrderAgainScreen />;
-//       case 'Categories':
-//         return <CategoriesScreen />;
-//       case 'Print':
-//         return <PrintScreen />;
-//       default:
-//         return <HomeScreen />;
-//     }
-//   };
-
-//   return (
-//     <>
-//       {renderScreen()}
-//       <BottomTabNavigator activeTab={activeTab} onTabPress={handleTabPress} />
-//     </>
-//   );
-// };
-
-// const AppNavigator = () => {
-//   return (
-//     <Stack.Navigator
-//       screenOptions={{
-//         headerShown: false,
-//       }}
-//     >
-//       <Stack.Screen name="MainApp" component={TabContainer} />
-//       {/* Add additional screens here that are outside the tab flow */}
-//       {/* <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} /> */}
-//       {/* <Stack.Screen name="Cart" component={CartScreen} /> */}
-//     </Stack.Navigator>
-//   );
-// };
-
-// export default AppNavigator;
-
 // navigation/AppNavigator.js
 
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from '../screens/HomeScreen';
 import OrderAgainScreen from '../screens/OrderAgainScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
 import PrintScreen from '../screens/PrintScreen';
+import MapSelectionScreen from '../screens/Homescreen/Mapselectionscreen';
 import BottomTabNavigator from '../navigation/BottomTabNavigator';
 
 const Stack = createNativeStackNavigator();
 
 // Main Tab Container Component
-const TabContainer = () => {
+const TabContainer = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('Home');
 
   const handleTabPress = (tabId) => {
@@ -79,17 +21,21 @@ const TabContainer = () => {
   };
 
   const renderScreen = () => {
+    const screenProps = {
+      navigation,
+    };
+
     switch (activeTab) {
       case 'Home':
-        return <HomeScreen />;
+        return <HomeScreen {...screenProps} />;
       case 'OrderAgain':
-        return <OrderAgainScreen />;
+        return <OrderAgainScreen {...screenProps} />;
       case 'Categories':
-        return <CategoriesScreen />;
+        return <CategoriesScreen {...screenProps} />;
       case 'Print':
-        return <PrintScreen />;
+        return <PrintScreen {...screenProps} />;
       default:
-        return <HomeScreen />;
+        return <HomeScreen {...screenProps} />;
     }
   };
 
@@ -103,18 +49,40 @@ const TabContainer = () => {
 
 const AppNavigator = () => {
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{
+    <Stack.Navigator
+      initialRouteName="MainApp"
+      screenOptions={{
+        headerShown: false,
+        animation: 'slide_from_right',
+      }}
+    >
+      <Stack.Screen 
+        name="MainApp" 
+        component={TabContainer}
+        options={{
           headerShown: false,
         }}
-      >
-        <Stack.Screen name="MainApp" component={TabContainer} />
-        {/* Add additional screens here that are outside the tab flow */}
-        {/* <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} /> */}
-        {/* <Stack.Screen name="Cart" component={CartScreen} /> */}
-      </Stack.Navigator>
-    </NavigationContainer>
+      />
+      
+      <Stack.Screen 
+        name="MapSelection" 
+        component={MapSelectionScreen}
+        options={{
+          headerShown: true,
+          headerTitle: 'Select Location',
+          headerBackTitle: 'Back',
+          presentation: 'modal',
+          headerStyle: {
+            backgroundColor: '#F5F5F5',
+          },
+          headerTitleStyle: {
+            fontSize: 18,
+            fontWeight: '600',
+          },
+          headerTintColor: '#1A1A1A',
+        }}
+      />
+    </Stack.Navigator>
   );
 };
 
