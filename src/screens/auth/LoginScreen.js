@@ -1,5 +1,4 @@
-// LoginScreen.js - Simplified without push notification logic
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,19 +12,29 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
-import { useAuth } from '../../context/AuthContext';
-import { authService } from '../../services/authService';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser, clearError } from '../../store/slices/authSlice';
+import { setUserData } from '../../store/slices/userSlice';
 
 const { width } = Dimensions.get('window');
 
 const LoginScreen = ({ navigation }) => {
-  const { login } = useAuth();
+  const dispatch = useDispatch();
+  const { loading, error } = useSelector((state) => state.auth);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+
+  // Handle errors from Redux
+  useEffect(() => {
+    if (error) {
+      Alert.alert('Login Failed', error);
+      dispatch(clearError());
+    }
+  }, [error, dispatch]);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -33,6 +42,7 @@ const LoginScreen = ({ navigation }) => {
   };
 
   const handleLogin = async () => {
+    // Validation
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -43,29 +53,32 @@ const LoginScreen = ({ navigation }) => {
       return;
     }
 
-    setLoading(true);
-
     try {
-      const response = await authService.login(email, password);
-      const token = response.token;
-      const userData = response.user;
+      console.log('Attempting login with Redux...');
+      
+      // Dispatch Redux login action
+      const result = await dispatch(loginUser({ email, password })).unwrap();
+      
+      console.log('Login successful:', result);
 
-      // Just login - no notification
-      await login(token, userData);
+      // Set user data in Redux
+      if (result.user) {
+        dispatch(setUserData(result.user));
+      }
 
+      // Show success message
       Alert.alert(
         'Success',
-        `Welcome back, ${userData.name}!`,
+        `Welcome back, ${result.user?.name || 'User'}!`,
         [{ text: 'Continue' }]
       );
-    } catch (error) {
-      console.error('Login error:', error);
-      Alert.alert(
-        'Login Failed',
-        error.message || 'Invalid credentials. Please try again.'
-      );
-    } finally {
-      setLoading(false);
+      
+      // Navigation will happen automatically via RootNavigator
+      // because auth.isAuthenticated will become true
+      
+    } catch (err) {
+      // Error already handled by Redux and useEffect above
+      console.error('Login error:', err);
     }
   };
 
@@ -110,6 +123,7 @@ const LoginScreen = ({ navigation }) => {
                 autoCapitalize="none"
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
+                editable={!loading}
               />
             </View>
           </View>
@@ -132,10 +146,12 @@ const LoginScreen = ({ navigation }) => {
                 secureTextEntry={!showPassword}
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => setPasswordFocused(false)}
+                editable={!loading}
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
                 style={styles.eyeButton}
+                disabled={loading}
               >
                 <Text style={styles.eyeIcon}>
                   {showPassword ? '👁️' : '👁️‍🗨️'}
@@ -148,6 +164,7 @@ const LoginScreen = ({ navigation }) => {
           <TouchableOpacity
             onPress={() => navigation.navigate('ForgotPassword')}
             style={styles.forgotPasswordContainer}
+            disabled={loading}
           >
             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
@@ -160,7 +177,12 @@ const LoginScreen = ({ navigation }) => {
             activeOpacity={0.8}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <ActivityIndicator color="#fff" />
+                <Text style={[styles.loginButtonText, { marginLeft: 10 }]}>
+                  Signing In...
+                </Text>
+              </View>
             ) : (
               <Text style={styles.loginButtonText}>Sign In</Text>
             )}
@@ -175,11 +197,19 @@ const LoginScreen = ({ navigation }) => {
 
           {/* Social Login Buttons */}
           <View style={styles.socialContainer}>
-            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
+            <TouchableOpacity 
+              style={styles.socialButton} 
+              activeOpacity={0.7}
+              disabled={loading}
+            >
               <Text style={styles.socialIcon}>📘</Text>
               <Text style={styles.socialText}>Facebook</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
+            <TouchableOpacity 
+              style={styles.socialButton} 
+              activeOpacity={0.7}
+              disabled={loading}
+            >
               <Text style={styles.socialIcon}>🔴</Text>
               <Text style={styles.socialText}>Google</Text>
             </TouchableOpacity>
@@ -188,7 +218,10 @@ const LoginScreen = ({ navigation }) => {
           {/* Sign Up Link */}
           <View style={styles.signupContainer}>
             <Text style={styles.signupText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('Signup')}
+              disabled={loading}
+            >
               <Text style={styles.signupLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>

@@ -106,7 +106,9 @@ import PrintScreen from '../screens/PrintScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import EditProfileScreen from '../screens/ProfileScreens/EditProfileScreen';
+import PaymentMethodsScreen from '../screens/ProfileScreens/PaymentMethodsScreen';
 import MyAddressesScreen from '../screens/ProfileScreens/MyAddressesScreen';
+import AddPaymentMethodScreen from '../screens/ProfileScreens/AddPaymentMethodScreen';
 import OrderHistoryScreen from '../screens/ProfileScreens/OrderHistoryScreen';
 import MapSelectionScreen from '../screens/Homescreen/Mapselectionscreen';
 import BottomTabNavigator from '../navigation/BottomTabNavigator';
@@ -194,6 +196,14 @@ const AppNavigator = () => {
           animation: 'slide_from_right',
         }}
       />
+      <Stack.Screen 
+        name="PaymentMethods" 
+        component={PaymentMethodsScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
 
       <Stack.Screen 
         name="OrderHistory" 
@@ -210,6 +220,14 @@ const AppNavigator = () => {
         options={{
           headerShown: false,
           animation: 'slide_from_right',
+        }}
+      />
+         <Stack.Screen 
+        name="AddPaymentMethod" 
+        component={AddPaymentMethodScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_bottom',
         }}
       />
 

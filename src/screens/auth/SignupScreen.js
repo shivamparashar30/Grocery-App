@@ -1,5 +1,4 @@
-// SignupScreen.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,18 +11,20 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { useAuth } from '../../context/AuthContext';
-import { authService } from '../../services/authService';
+import { useDispatch, useSelector } from 'react-redux';
+import { signupUser, clearError } from '../../store/slices/authSlice';
+import { setUserData } from '../../store/slices/userSlice';
 import notificationService from '../../services/notificationService';
 
 const SignupScreen = ({ navigation }) => {
-  const { login } = useAuth();
+  const dispatch = useDispatch();
+  const { loading, error } = useSelector((state) => state.auth);
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -33,6 +34,14 @@ const SignupScreen = ({ navigation }) => {
   const [phoneFocused, setPhoneFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
+
+  // Handle errors from Redux
+  useEffect(() => {
+    if (error) {
+      Alert.alert('Signup Failed', error);
+      dispatch(clearError());
+    }
+  }, [error, dispatch]);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -76,9 +85,9 @@ const SignupScreen = ({ navigation }) => {
       return;
     }
 
-    setLoading(true);
-
     try {
+      console.log('Starting signup process with Redux...');
+
       // Request notification permissions first
       const permissionGranted = await notificationService.requestPermission();
       
@@ -91,37 +100,36 @@ const SignupScreen = ({ navigation }) => {
         console.log('Notification permission denied');
       }
 
-      // Call the signup API with FCM token
-      const response = await authService.signup(
+      // Dispatch Redux signup action
+      const result = await dispatch(signupUser({
         name,
         email,
         password,
         phone,
-        'user',
-        fcmToken // Pass FCM token to backend
-      );
+        role: 'user',
+        fcmToken
+      })).unwrap();
 
-      // Extract token and user data from response
-      const token = response.token;
-      const userData = response.user;
+      console.log('Signup successful:', result);
 
-      // Save to auth context
-      await login(token, userData);
+      // Set user data in Redux
+      if (result.user) {
+        dispatch(setUserData(result.user));
+      }
 
+      // Show success message
       Alert.alert(
         'Welcome! 🎉',
         `Account created successfully!\n\nCheck your notifications for a special welcome offer!`,
-        [{ text: 'Let\'s Shop!', onPress: () => {} }]
+        [{ text: "Let's Shop!", onPress: () => {} }]
       );
 
-    } catch (error) {
-      console.error('Signup error:', error);
-      Alert.alert(
-        'Signup Failed',
-        error.message || 'Unable to create account. Please try again.'
-      );
-    } finally {
-      setLoading(false);
+      // Navigation will happen automatically via RootNavigator
+      // because auth.isAuthenticated will become true
+
+    } catch (err) {
+      // Error already handled by Redux and useEffect above
+      console.error('Signup error:', err);
     }
   };
 
@@ -139,6 +147,7 @@ const SignupScreen = ({ navigation }) => {
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={styles.backButton}
+            disabled={loading}
           >
             <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
@@ -173,6 +182,7 @@ const SignupScreen = ({ navigation }) => {
                 autoCapitalize="words"
                 onFocus={() => setNameFocused(true)}
                 onBlur={() => setNameFocused(false)}
+                editable={!loading}
               />
             </View>
           </View>
@@ -196,6 +206,7 @@ const SignupScreen = ({ navigation }) => {
                 autoCapitalize="none"
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
+                editable={!loading}
               />
             </View>
           </View>
@@ -219,6 +230,7 @@ const SignupScreen = ({ navigation }) => {
                 maxLength={10}
                 onFocus={() => setPhoneFocused(true)}
                 onBlur={() => setPhoneFocused(false)}
+                editable={!loading}
               />
             </View>
           </View>
@@ -241,11 +253,13 @@ const SignupScreen = ({ navigation }) => {
                 secureTextEntry={!showPassword}
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => setPasswordFocused(false)}
+                editable={!loading}
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
                 style={styles.eyeButton}
                 activeOpacity={0.7}
+                disabled={loading}
               >
                 <Text style={styles.eyeIcon}>
                   {showPassword ? '👁️' : '👁️‍🗨️'}
@@ -272,11 +286,13 @@ const SignupScreen = ({ navigation }) => {
                 secureTextEntry={!showConfirmPassword}
                 onFocus={() => setConfirmPasswordFocused(true)}
                 onBlur={() => setConfirmPasswordFocused(false)}
+                editable={!loading}
               />
               <TouchableOpacity
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                 style={styles.eyeButton}
                 activeOpacity={0.7}
+                disabled={loading}
               >
                 <Text style={styles.eyeIcon}>
                   {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
@@ -315,7 +331,12 @@ const SignupScreen = ({ navigation }) => {
             activeOpacity={0.8}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <ActivityIndicator color="#fff" />
+                <Text style={[styles.signupButtonText, { marginLeft: 10 }]}>
+                  Creating Account...
+                </Text>
+              </View>
             ) : (
               <Text style={styles.signupButtonText}>Create Account</Text>
             )}
@@ -330,11 +351,19 @@ const SignupScreen = ({ navigation }) => {
 
           {/* Social Signup Buttons */}
           <View style={styles.socialContainer}>
-            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
+            <TouchableOpacity 
+              style={styles.socialButton} 
+              activeOpacity={0.7}
+              disabled={loading}
+            >
               <Text style={styles.socialIcon}>📘</Text>
               <Text style={styles.socialText}>Facebook</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
+            <TouchableOpacity 
+              style={styles.socialButton} 
+              activeOpacity={0.7}
+              disabled={loading}
+            >
               <Text style={styles.socialIcon}>🔴</Text>
               <Text style={styles.socialText}>Google</Text>
             </TouchableOpacity>
@@ -343,7 +372,10 @@ const SignupScreen = ({ navigation }) => {
           {/* Login Link */}
           <View style={styles.loginContainer}>
             <Text style={styles.loginText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('Login')}
+              disabled={loading}
+            >
               <Text style={styles.loginLink}>Sign In</Text>
             </TouchableOpacity>
           </View>
@@ -352,6 +384,7 @@ const SignupScreen = ({ navigation }) => {
     </KeyboardAvoidingView>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
